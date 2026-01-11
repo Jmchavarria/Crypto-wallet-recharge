@@ -1,6 +1,6 @@
 # Crypto Wallet Recharge API
 
-API de recargas para billeteras cripto construida con NestJS, Prisma y PostgreSQL. Expone endpoints para registrar recargas y consultar el historial, con un control de acceso simple basado en un header de rol.
+API de recargas para billeteras cripto construida con NestJS, Prisma y PostgreSQL. Expone endpoints para registrar recargas y consultar el historial, con control de acceso simple basado en usuarios almacenados en base de datos.
 
 ## Stack
 
@@ -10,7 +10,7 @@ API de recargas para billeteras cripto construida con NestJS, Prisma y PostgreSQ
 
 ## Requisitos
 
-- Node.js 18+ (recomendado).
+- Node.js 18+.
 - PostgreSQL disponible localmente o remoto.
 
 ## Configuración
@@ -34,10 +34,25 @@ API de recargas para billeteras cripto construida con NestJS, Prisma y PostgreSQ
    npx prisma migrate dev
    ```
 
-## Ejecución
+## Seed (datos iniciales)
+
+Se incluye un seed básico para crear usuarios y recargas de ejemplo. El seed crea:
+
+- Usuario admin: `user-admin-001`
+- Usuario de solo lectura: `user-readonly-001`
+
+Para ejecutar el seed:
 
 ```bash
-# desarrollo
+npx prisma db seed
+```
+
+> Si ya existen registros, el seed actualiza los usuarios y solo inserta recargas si todavía no hay recargas para el usuario admin.
+
+## Ejecución del proyecto
+
+```bash
+# desarrollo (con recarga)
 npm run start:dev
 
 # producción
@@ -46,32 +61,24 @@ npm run start:prod
 
 La API se levanta en `http://localhost:3000`.
 
-## Autorización por rol
+## Autorización por usuario
 
-La API usa el header `x-role` para simular autenticación. Si no envías el header, el rol es `read-only` por defecto.
+La API lee el usuario desde el header `x-user-id` y valida que exista en base de datos. El rol se toma del usuario en la tabla `users`.
 
-Valores permitidos:
+- Si no envías `x-user-id`, la API responde `401 Missing x-user-id header`.
+- Si el usuario no existe, responde `401 Invalid user`.
 
-- `admin`
-- `read-only` o `readonly`
-
-Ejemplo:
-
-```bash
-curl -H "x-role: admin" http://localhost:3000/recharges
-```
-
-## Endpoints
+## Endpoints y ejemplos de uso
 
 ### `POST /recharges`
 
-Crea una recarga (solo `admin`).
+Crea una recarga. Solo permitido para usuarios con rol `admin`.
 
 **Body**
 
 ```json
 {
-  "userId": "user-123",
+  "userId": "user-admin-001",
   "walletType": "USDC",
   "amountFiat": 100,
   "fiatCurrency": "USD",
@@ -85,12 +92,29 @@ Crea una recarga (solo `admin`).
 - `fiatCurrency`: `USD`, `CHF`, `COP`
 - `transactionType`: `BANK_TRANSFER`, `ATM_NATIONAL`, `ATM_INTERNATIONAL`
 
-### `GET /recharges`
-
-Lista las recargas (roles `admin` y `read-only`).
+**cURL**
 
 ```bash
-curl -H "x-role: read-only" http://localhost:3000/recharges
+curl -X POST http://localhost:3000/recharges \
+  -H "Content-Type: application/json" \
+  -H "x-user-id: user-admin-001" \
+  -d '{
+    "userId": "user-admin-001",
+    "walletType": "USDC",
+    "amountFiat": 100,
+    "fiatCurrency": "USD",
+    "transactionType": "BANK_TRANSFER"
+  }'
+```
+
+### `GET /recharges`
+
+Lista las recargas. Roles permitidos: `admin` y `read-only`.
+
+**cURL**
+
+```bash
+curl -H "x-user-id: user-readonly-001" http://localhost:3000/recharges
 ```
 
 ## Tests
