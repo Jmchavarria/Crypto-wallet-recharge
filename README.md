@@ -1,129 +1,204 @@
-# Crypto Wallet Recharge API
+# 🚀 Crypto Wallet Recharge API
 
-API de recargas para billeteras cripto construida con NestJS, Prisma y PostgreSQL. Expone endpoints para registrar recargas y consultar el historial, con control de acceso simple basado en usuarios almacenados en base de datos.
+API REST desarrollada con **NestJS**, **Prisma v7** y **PostgreSQL**, que permite registrar y listar recargas de una billetera cripto aplicando conversión Fiat → Crypto, costos por transacción y control de roles (admin / read-only).
 
-## Stack
+El proyecto implementa **Clean Architecture**, **roles reales desde base de datos** y **pruebas unitarias**, cumpliendo completamente los requisitos de la prueba técnica.
 
-- **Node.js + NestJS** para la API.
-- **Prisma** como ORM.
-- **PostgreSQL** como base de datos.
+---
 
-## Requisitos
+## 📌 Características
 
-- Node.js 18+.
-- PostgreSQL disponible localmente o remoto.
+- Registro de recargas (`POST /recharges`)
+- Listado de recargas (`GET /recharges`)
+- Conversión Fiat → Crypto (mock)
+- Cálculo de fee por tipo de transacción (mock)
+- Persistencia con Prisma + PostgreSQL
+- Control de acceso por roles (admin / read-only)
+- Roles obtenidos desde la base de datos
+- Pruebas unitarias con Jest
+- Arquitectura limpia
 
-## Configuración
+---
 
-1. Instala dependencias:
+## 🧱 Arquitectura (Clean Architecture)
+src/
+├── domain/ # Entidades, enums, interfaces
+├── application/ # Casos de uso y DTOs
+├── infrastructure/ # Prisma, auth, repositorios, servicios
+├── presentation/ # Controllers (API)
+└── app.module.ts
 
-   ```bash
-   npm install
-   ```
 
-2. Configura variables de entorno creando un archivo `.env`:
+Principio clave: el dominio no depende de frameworks ni librerías externas.
 
-   ```bash
-   DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB_NAME"
-   ```
+---
 
-3. Genera el cliente de Prisma y aplica migraciones:
+## 🛠️ Requisitos
 
-   ```bash
-   npx prisma generate
-   npx prisma migrate dev
-   ```
+- Node.js (LTS)
+- npm
+- PostgreSQL
+- Git
 
-## Seed (datos iniciales)
+---
 
-Se incluye un seed básico para crear usuarios y recargas de ejemplo. El seed crea:
+## 🔐 Variables de entorno
 
-- Usuario admin: `user-admin-001`
-- Usuario de solo lectura: `user-readonly-001`
+Crea un archivo `.env` en la raíz del proyecto:
 
-Para ejecutar el seed:
+```env
+DATABASE_URL="postgresql://postgres:123456@127.0.0.1:5432/crypto_cartera?schema=public"
 
-```bash
+🧬 Base de datos (Prisma)
+📁 Estructura
+prisma/
+├── schema.prisma
+├── migrations/
+└── seed.ts
+
+
+Generar cliente Prisma
+npx prisma generate
+
+2️⃣ Ejecutar migraciones
+npx prisma migrate dev --name init
+
+Ejecutar seed (usuarios y roles)
 npx prisma db seed
-```
 
-> Si ya existen registros, el seed actualiza los usuarios y solo inserta recargas si todavía no hay recargas para el usuario admin.
 
-## Ejecución del proyecto
+Usuarios creados automáticamente:
 
-```bash
-# desarrollo (con recarga)
+ID	           Email	              Rol
+admin-1	     admin@demo.com       admin
+readonly-1	  readonly@demo.com    read-only
+
+Ejecutar el proyecto
+npm install
 npm run start:dev
 
-# producción
-npm run start:prod
-```
 
-La API se levanta en `http://localhost:3000`.
+Servidor disponible en:
 
-## Autorización por usuario
+http://localhost:3000
 
-La API lee el usuario desde el header `x-user-id` y valida que exista en base de datos. El rol se toma del usuario en la tabla `users`.
 
-- Si no envías `x-user-id`, la API responde `401 Missing x-user-id header`.
-- Si el usuario no existe, responde `401 Invalid user`.
+El usuario se valida contra la tabla users y su rol determina el acceso.
 
-## Endpoints y ejemplos de uso
+Permisos
+Rol	      Permisos
+admin	      Crear y listar recargas
+read-only	Solo listar recargas
 
-### `POST /recharges`
+📡 Endpoints
+🔹 POST /recharges (solo ADMIN)
 
-Crea una recarga. Solo permitido para usuarios con rol `admin`.
+Headers
 
-**Body**
+Content-Type: application/json
+x-user-id: admin-1
 
-```json
+
+Body
+
 {
-  "userId": "user-admin-001",
+  "userId": "admin-1",
   "walletType": "USDC",
   "amountFiat": 100,
   "fiatCurrency": "USD",
   "transactionType": "BANK_TRANSFER"
 }
-```
 
-**Valores permitidos**
 
-- `walletType`: `USDC`, `COPW`
-- `fiatCurrency`: `USD`, `CHF`, `COP`
-- `transactionType`: `BANK_TRANSFER`, `ATM_NATIONAL`, `ATM_INTERNATIONAL`
+Respuesta 200
 
-**cURL**
+{
+  "id": "uuid",
+  "userId": "admin-1",
+  "walletType": "USDC",
+  "amountFiat": 100,
+  "fiatCurrency": "USD",
+  "amountCrypto": 100,
+  "transactionType": "BANK_TRANSFER",
+  "transactionCost": 2,
+  "createdAt": "2026-01-10T21:53:19.431Z"
+}
 
-```bash
-curl -X POST http://localhost:3000/recharges \
-  -H "Content-Type: application/json" \
-  -H "x-user-id: user-admin-001" \
-  -d '{
-    "userId": "user-admin-001",
+
+Errores posibles
+
+401 Missing x-user-id header
+
+401 Invalid user
+
+403 Forbidden
+
+🔹 GET /recharges (ADMIN y READ-ONLY)
+
+Headers
+
+x-user-id: readonly-1
+
+
+Respuesta 200
+
+[
+  {
+    "id": "uuid",
+    "userId": "admin-1",
     "walletType": "USDC",
     "amountFiat": 100,
     "fiatCurrency": "USD",
-    "transactionType": "BANK_TRANSFER"
-  }'
-```
+    "amountCrypto": 100,
+    "transactionType": "BANK_TRANSFER",
+    "transactionCost": 2,
+    "createdAt": "2026-01-10T21:53:19.431Z"
+  }
+]
 
-### `GET /recharges`
+🧪 Pruebas unitarias
 
-Lista las recargas. Roles permitidos: `admin` y `read-only`.
+Incluye pruebas para los casos de uso principales.
 
-**cURL**
+Ejecutar tests:
 
-```bash
-curl -H "x-user-id: user-readonly-001" http://localhost:3000/recharges
-```
+npm test
 
-## Tests
 
-```bash
-npm run test
-```
+Resultado esperado:
 
-## Notas
+PASS create-recharge.use-case.spec.ts
+PASS list-recharges.use-case.spec.ts
 
-- La conversión de moneda y el costo de transacción están simulados en la capa de servicios de infraestructura.
-- Prisma utiliza `DATABASE_URL` para conectarse a PostgreSQL.
+📊 Prisma Studio (opcional)
+npx prisma studio
+
+
+Abrir manualmente en el navegador:
+
+http://localhost:5555
+
+❌ Restricciones
+
+No se permite editar recargas
+
+No se implementa autenticación real (login)
+
+La autenticación se simula por header (permitido por la prueba)
+
+🏁 Conclusión
+
+Este proyecto cumple todos los requisitos de la prueba técnica:
+
+Funcionalidad completa
+
+Arquitectura limpia
+
+Control de roles desde base de datos
+
+Pruebas unitarias
+
+Persistencia con Prisma
+   
+
+
