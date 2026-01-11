@@ -2,8 +2,8 @@ import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 
-import { PrismaModule } from './infrastructure/prisma/prisma.module';
-import { PrismaService } from './infrastructure/prisma/prisma.service';
+import { PrismaModule } from './infrastructure/database/prisma.module';
+import { PrismaService } from './infrastructure/database/prisma.service';
 
 import { userHeaderMiddleware } from './infrastructure/auth/user-header.middleware';
 import { RolesGuard } from './infrastructure/auth/roles.guard';
@@ -22,8 +22,8 @@ import { CONVERSION_SERVICE } from './domain/services/conversion.service.interfa
 import { FEE_SERVICE } from './domain/services/fee.service.interface';
 
 // Implementations
-import { RechargeRepositoryImpl } from './infrastructure/prisma/repositories/recharge.repository.impl';
-import { UserRepositoryImpl } from './infrastructure/prisma/repositories/user.repository.impl';
+import { RechargeRepositoryImpl } from './infrastructure/database/repositories/recharge.repository.impl';
+import { UserRepositoryImpl } from './infrastructure/database/repositories/user.repository.impl';
 import { ConversionServiceImpl } from './infrastructure/services/conversion.service.impl';
 import { FeeServiceImpl } from './infrastructure/services/fee.service.impl';
 

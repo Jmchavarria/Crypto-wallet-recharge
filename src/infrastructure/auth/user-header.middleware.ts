@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { PrismaService } from '../prisma/prisma.service';
+import type { PrismaService } from '../database/prisma.service';
 
 export function userHeaderMiddleware(prisma: PrismaService) {
   return async (req: Request, res: Response, next: NextFunction) => {
