@@ -3,7 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
-import { roleHeaderMiddleware } from './infrastructure/auth/role-header.middleware';
+import { PrismaService } from './infrastructure/prisma/prisma.service';
+
+import { userHeaderMiddleware } from './infrastructure/auth/user-header.middleware';
 import { RolesGuard } from './infrastructure/auth/roles.guard';
 
 // Controllers
@@ -26,10 +28,7 @@ import { ConversionServiceImpl } from './infrastructure/services/conversion.serv
 import { FeeServiceImpl } from './infrastructure/services/fee.service.impl';
 
 @Module({
-  imports: [
-    PrismaModule,
-    ConfigModule.forRoot({ isGlobal: true }),
-  ],
+  imports: [PrismaModule, ConfigModule.forRoot({ isGlobal: true })],
   controllers: [RechargeController],
   providers: [
     CreateRechargeUseCase,
@@ -41,12 +40,13 @@ import { FeeServiceImpl } from './infrastructure/services/fee.service.impl';
     { provide: RECHARGE_REPOSITORY, useClass: RechargeRepositoryImpl },
     { provide: USER_REPOSITORY, useClass: UserRepositoryImpl },
 
-    // ✅ Guard global
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule implements NestModule {
+  constructor(private readonly prisma: PrismaService) {}
+
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(roleHeaderMiddleware).forRoutes('*');
+    consumer.apply(userHeaderMiddleware(this.prisma)).forRoutes('*');
   }
 }
