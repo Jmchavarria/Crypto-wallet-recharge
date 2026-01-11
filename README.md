@@ -21,12 +21,17 @@ El proyecto implementa **Clean Architecture**, **roles reales desde base de dato
 ---
 
 ## 🧱 Arquitectura (Clean Architecture)
+
+
+````
 src/
 ├── domain/ # Entidades, enums, interfaces
 ├── application/ # Casos de uso y DTOs
 ├── infrastructure/ # Prisma, auth, repositorios, servicios
 ├── presentation/ # Controllers (API)
 └── app.module.ts
+
+````
 
 
 Principio clave: el dominio no depende de frameworks ni librerías externas.
