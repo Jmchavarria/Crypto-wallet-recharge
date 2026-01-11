@@ -1,29 +1,18 @@
 // src/domain/entities/recharge.entity.ts
-import { FiatCurrency } from '../enums/fiat-currency.enum';
 import { WalletType } from '../enums/wallet-type.enum';
+import { FiatCurrency } from '../enums/fiat-currency.enum';
 import { TransactionType } from '../enums/transaction-type.enum';
 
 export class Recharge {
-  id: string;
-  userId: string;
-  walletType: WalletType;
-  amountFiat: number;
-  fiatCurrency: FiatCurrency;
-  amountCrypto: number;
-  transactionType: TransactionType;
-  transactionCost: number;
-  createdAt: Date;
-
-  constructor(partial: Partial<Recharge>) {
-    Object.assign(this, partial);
-  }
-
-  calculateFinalAmount(): number {
-    return this.amountCrypto - this.transactionCost;
-  }
-
-  getTransactionCostPercentage(): number {
-    if (this.amountCrypto === 0) return 0;
-    return (this.transactionCost / this.amountCrypto) * 100;
-  }
+  constructor(
+    public readonly id: string,
+    public readonly userId: string,
+    public readonly walletType: WalletType,
+    public readonly amountFiat: number,
+    public readonly fiatCurrency: FiatCurrency,
+    public readonly amountCrypto: number,
+    public readonly transactionType: TransactionType,
+    public readonly transactionCost: number,
+    public readonly createdAt: Date,
+  ) {}
 }

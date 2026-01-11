@@ -1,56 +1,47 @@
+// src/application/use-cases/create-recharge.use-case.ts
 import { Inject, Injectable } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
-import { Recharge } from '../../domain/entities/recharge.entity';
-import type {
-    IRechargeRepository,
-} from '../../domain/repositories/recharge.repository.interface';
+
+import type { IRechargeRepository } from '../../domain/repositories/recharge.repository.interface';
 import { RECHARGE_REPOSITORY } from '../../domain/repositories/recharge.repository.interface';
 
-import type { IConversionService, } from '../../domain/repositories/recharge.repository.interface';
-import { CONVERSION_SERVICE } from '../../domain/repositories/recharge.repository.interface';
-import type { IFeeService, } from '../../domain/repositories/recharge.repository.interface';
-import { FEE_SERVICE } from '../../domain/repositories/recharge.repository.interface';
-import { CreateRechargeDto } from '../dto/create-recharge.dto';
+import type { IConversionService } from '../../domain/services/conversion.service.interface';
+import { CONVERSION_SERVICE } from '../../domain/services/conversion.service.interface';
+
+import type { IFeeService } from '../../domain/services/fee.service.interface';
+import { FEE_SERVICE } from '../../domain/services/fee.service.interface';
+
+import { Recharge } from '../../domain/entities/recharge.entity';
+import type { CreateRechargeDto } from '../dtos/create-recharge.dto';
 
 @Injectable()
 export class CreateRechargeUseCase {
-    constructor(
-        @Inject(RECHARGE_REPOSITORY)
-        private readonly rechargeRepository: IRechargeRepository,
-        @Inject(CONVERSION_SERVICE)
-        private readonly conversionService: IConversionService,
-        @Inject(FEE_SERVICE)
-        private readonly feeService: IFeeService,
-    ) { }
+  constructor(
+    @Inject(RECHARGE_REPOSITORY) private readonly repo: IRechargeRepository,
+    @Inject(CONVERSION_SERVICE) private readonly conversion: IConversionService,
+    @Inject(FEE_SERVICE) private readonly fees: IFeeService,
+  ) {}
 
-    async execute(dto: CreateRechargeDto): Promise<Recharge> {
-        // 1. Convertir monto Fiat a Crypto
-        const amountCrypto = this.conversionService.convert(
-            dto.amountFiat,
-            dto.fiatCurrency,
-            dto.walletType,
-        );
+  async execute(dto: CreateRechargeDto) {
+    const amountCrypto = this.conversion.convert(
+      dto.amountFiat,
+      dto.fiatCurrency,
+      dto.walletType,
+    );
 
-        // 2. Calcular costo de transacción
-        const transactionCost = this.feeService.calculateFee(
-            amountCrypto,
-            dto.transactionType,
-        );
+    const transactionCost = this.fees.feeFor(dto.transactionType);
 
-        // 3. Crear entidad de recarga
-        const recharge = new Recharge({
-            id: uuidv4(),
-            userId: dto.userId,
-            walletType: dto.walletType,
-            amountFiat: dto.amountFiat,
-            fiatCurrency: dto.fiatCurrency,
-            amountCrypto,
-            transactionType: dto.transactionType,
-            transactionCost,
-            createdAt: new Date(),
-        });
+    const recharge = new Recharge(
+      crypto.randomUUID(),
+      dto.userId,
+      dto.walletType,
+      dto.amountFiat,
+      dto.fiatCurrency,
+      amountCrypto,
+      dto.transactionType,
+      transactionCost,
+      new Date(),
+    );
 
-        // 4. Guardar en repositorio
-        return await this.rechargeRepository.create(recharge);
-    }
+    return this.repo.create(recharge);
+  }
 }

@@ -1,31 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { IConversionService } from '../repositories/recharge.repository.interface';
-import { FiatCurrency } from '../../domain/enums/fiat-currency.enum';
-import { WalletType } from '../../domain/enums/wallet-type.enum';
-import { CONVERSION_RATES } from 'src/infrastructure/config/conversion-rates.config';
+// src/domain/services/conversion.service.interface.ts
 
-@Injectable()
-export class ConversionServiceImpl implements IConversionService {
-  convert(
-    amountFiat: number,
-    fiatCurrency: FiatCurrency,
-    walletType: WalletType,
-  ): number {
-    const rate = this.getRate(fiatCurrency, walletType);
-    return amountFiat * rate;
-  }
+import { FiatCurrency } from '../enums/fiat-currency.enum';
+import { WalletType } from '../enums/wallet-type.enum';
 
-  getRate(fiatCurrency: FiatCurrency, walletType: WalletType): number {
-    const conversionRate = CONVERSION_RATES.find(
-      (r) => r.from === fiatCurrency && r.to === walletType,
-    );
+export const CONVERSION_SERVICE = 'CONVERSION_SERVICE';
 
-    if (!conversionRate) {
-      throw new Error(
-        `No conversion rate found for ${fiatCurrency} to ${walletType}`,
-      );
-    }
-
-    return conversionRate.rate;
-  }
+export interface IConversionService {
+  convert(amount: number, fiat: FiatCurrency, wallet: WalletType): number;
 }

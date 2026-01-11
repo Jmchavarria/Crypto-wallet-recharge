@@ -1,5 +1,6 @@
+// src/domain/enums/transaction-type.enum.ts
 export enum TransactionType {
-  BANK_TRANSFER = 'bank_transfer',
-  ATM_NATIONAL = 'atm_national',
-  ATM_INTERNATIONAL = 'atm_international',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  ATM_NATIONAL = 'ATM_NATIONAL',
+  ATM_INTERNATIONAL = 'ATM_INTERNATIONAL',
 }

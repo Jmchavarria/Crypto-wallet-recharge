@@ -1,22 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { IFeeService } from '../repositories/recharge.repository.interface';
-import { TransactionType } from '../../domain/enums/transaction-type.enum';
-import { TRANSACTION_FEES } from 'src/infrastructure/config/transaction-fees.config';
+// src/domain/services/fee.service.interface.ts
+import { TransactionType } from "../enums/transaction-type.enum";
 
-@Injectable()
-export class FeeServiceImpl implements IFeeService {
-  calculateFee(amountCrypto: number, transactionType: TransactionType): number {
-    const feePercentage = this.getFeePercentage(transactionType);
-    return (amountCrypto * feePercentage) / 100;
-  }
+export const FEE_SERVICE = 'FEE_SERVICE';
 
-  getFeePercentage(transactionType: TransactionType): number {
-    const fee = TRANSACTION_FEES.find((f) => f.type === transactionType);
-
-    if (!fee) {
-      throw new Error(`No fee configuration found for ${transactionType}`);
-    }
-
-    return fee.percentage;
-  }
+export interface IFeeService {
+  feeFor(type: TransactionType): number;
 }
